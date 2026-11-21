@@ -1,0 +1,23 @@
+{
+  "obis_row_counts": {
+    "LP": 45585961,
+    "DBE": 27319
+  },
+  "non_lp_rows": 27319,
+  "non_lp_time_counts": {
+    "00:00:00": 27312,
+    "00:00:01": 7
+  },
+  "non_lp_date_range": [
+    "2024-03-28",
+    "2024-11-01"
+  ],
+  "non_lp_households": 1205,
+  "dbe_rows_at_0000": 27312,
+  "dbe_rows_with_LP_in_same_slot": 0,
+  "dbe_rows_with_both_LP_neighbours": 8029,
+  "dbe_between_LP_2345_and_0015": 7996,
+  "share_between": 0.9958898991157056,
+  "median_dbe_minus_LP_2345_kwh": 0.032999999999901775,
+  "interpretation": "DBE rows occupy the 00:00 slot only; where tested they are the same cumulative import register as LP."
+}
