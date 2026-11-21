@@ -1,0 +1,18 @@
+{
+ "valid": 3,
+ "peaks": {
+  "IDA": 0.8,
+  "IDC": 0.8,
+  "IDH": 0.8
+ },
+ "status": {
+  "IDB": "missing_reading",
+  "IDD": "conflicting_duplicate",
+  "IDE": "negative_interval",
+  "IDF": "implausible_interval",
+  "IDG": "missing_reading"
+ },
+ "offgrid": 1,
+ "exact_dup": 1,
+ "conflict_dup": 1
+}
