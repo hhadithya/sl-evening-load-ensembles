@@ -1,11 +1,9 @@
-# Dependencies for the audit, notebooks, feature code and ensemble experiments.
-# Extended in the dashboard commit.
-pandas>=2.0,<3
-numpy>=1.26,<3
+# Everything needed to rebuild the dashboard data and re-run the experiment code and tests.
+-r requirements.txt
 scikit-learn>=1.5,<2   # tested 1.6.1
 xgboost>=2.1,<3        # tested 2.1.4 (macOS also needs `brew install libomp`)
 joblib>=1.3
 scipy>=1.11
-matplotlib>=3.8
-nbformat>=5.9
-nbclient>=0.9
+matplotlib>=3.8        # notebooks only
+nbformat>=5.9          # notebooks only
+nbclient>=0.9          # notebooks only

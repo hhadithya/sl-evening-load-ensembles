@@ -1,0 +1,105 @@
+{
+  "raw_rows": 45613280,
+  "households_in_raw": 2938,
+  "valid_household_days": 464640,
+  "households_with_valid": 2931,
+  "missing_quarter_hours_pct": 53.595218271880526,
+  "first_date": "2023-10-01",
+  "last_date": "2024-12-22",
+  "model_rows": 455983,
+  "splits": {
+    "train": {
+      "dates": [
+        "2023-10-01",
+        "2024-09-30"
+      ],
+      "rows": 315079,
+      "households": 2899
+    },
+    "val": {
+      "dates": [
+        "2024-10-01",
+        "2024-11-10"
+      ],
+      "rows": 82500,
+      "households": 2677
+    },
+    "test": {
+      "dates": [
+        "2024-11-11",
+        "2024-12-22"
+      ],
+      "rows": 58404,
+      "households": 2120
+    }
+  },
+  "cv_folds": [
+    {
+      "train_rows": 186108,
+      "valid_rows": 36933,
+      "valid_dates": [
+        "2024-05-31",
+        "2024-07-10"
+      ]
+    },
+    {
+      "train_rows": 223041,
+      "valid_rows": 50849,
+      "valid_dates": [
+        "2024-07-11",
+        "2024-08-20"
+      ]
+    },
+    {
+      "train_rows": 273890,
+      "valid_rows": 41189,
+      "valid_dates": [
+        "2024-08-21",
+        "2024-09-30"
+      ]
+    }
+  ],
+  "features": {
+    "lag1": "yesterday's evening kWh (NaN if yesterday is not a valid household-day)",
+    "lag7": "same weekday last week, evening kWh (NaN if missing)",
+    "last_value": "most recent valid evening kWh on or before D-1 (never NaN once any history exists)",
+    "gap_days": "calendar days between D and that most recent valid evening (1 = yesterday)",
+    "roll7_median": "median evening kWh over the 7 calendar days D-7..D-1 (observed days only)",
+    "roll28_median": "median evening kWh over D-28..D-1: the household's recent level",
+    "roll28_iqr": "p75-p25 of the same window: how variable the household has been",
+    "roll28_frac_zero": "share of observed evenings in D-28..D-1 that are exactly 0 kWh",
+    "roll7_n": "number of observed evenings in D-7..D-1 (0-7): recent coverage",
+    "roll28_n": "number of observed evenings in D-28..D-1 (0-28): history depth",
+    "expanding_median": "median of every valid evening the household has up to D-1: long-run level",
+    "dow": "day of week of D (0 = Monday); known in advance",
+    "is_weekend": "1 if D is Saturday or Sunday; known in advance",
+    "month": "calendar month of D; known in advance"
+  },
+  "test_rows": 58404,
+  "test_households": 2120,
+  "val_rows": 82500,
+  "val_unseen_rows": 125,
+  "val_unseen_households": 26,
+  "test_unseen_rows": 0,
+  "tr2_by_period": {
+    "test": {
+      "agree": 0,
+      "disagree": 0,
+      "no_bracket": 58404,
+      "plateau_inconsistent": 0
+    },
+    "validation": {
+      "agree": 55601,
+      "disagree": 22,
+      "no_bracket": 26531,
+      "plateau_inconsistent": 346
+    }
+  },
+  "target_median_kwh": 0.668,
+  "target_zero_share_test": 0.07883021710841723,
+  "cv_reference": {
+    "cv_MAE": 0.418313143863541,
+    "cv_RMSE": 1.2522460738288441
+  },
+  "license": "CC BY 4.0 (Zenodo record 15023048)"
+}

@@ -1,0 +1,6 @@
+# Runtime dependencies of the dashboard (tested with the versions in the comments).
+# The app reads only the small files in dashboard/data: no raw data, models or ML libraries are needed to run it.
+streamlit>=1.46,<2     # tested 1.50.0  (top navigation needs >= 1.46)
+plotly>=6.0,<8         # tested 7.1.0
+pandas>=2.0,<3         # tested 2.3.3
+numpy>=1.26,<3         # tested 2.0.2

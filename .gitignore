@@ -1,0 +1,45 @@
+# --- local environments, caches and secrets
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.DS_Store
+.claude/
+.vscode/
+.idea/
+.env
+
+# --- raw and bulky data (obtained separately from Zenodo record 15023048; see README)
+data_zenodo/
+parts/
+*.zip
+
+# --- audit outputs: keep only the two small, reviewable summaries
+audit_out/*
+!audit_out/audit_report.json
+!audit_out/dbe_probe.json
+
+# --- regenerable intermediates and trained models (rebuilt by phase1.py / phase2.py)
+outputs/eda/selected_households_raw.csv.gz
+outputs/phase1/model_table.csv.gz
+outputs/phase2/models/
+outputs/phase2/oof_predictions_cv.csv.gz
+
+# --- household-level predictions carry the dataset's own IDs; the dashboard ships a pseudonymised copy instead
+outputs/phase2/predictions_val.csv.gz
+outputs/phase2/predictions_test.csv.gz
+
+# --- local logs and superseded first-draft artefacts (kept on disk, not published)
+*.log
+run_logs/
+install.log
+test_results.txt
+outputs/phase2/final_log.txt
+real_sample/
+tests/out_synth/
+tests/js_synth.json
+tests/run_js_scan_node.mjs
+browser_full_scan.js
+fetch_parts.sh
+01_data_exploration.ipynb

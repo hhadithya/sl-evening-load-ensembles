@@ -13,7 +13,7 @@ Target: household grid import in kWh over 18:30–22:30 Sri Lanka time, for the 
 
 All earlier rules are unchanged: 17 readings 18:30…22:30, nothing imputed, cap 10 kWh per 15 min, first failing rule recorded, conflicting duplicates rejected. The original synthetic fixture still gives the same known answers. Added a regression test with distinct increments in every interval so that any one-slot alignment error would change the answer.
 
-Test run: `python -m unittest discover -s tests -v` → **24 tests, all OK** (`test_results.txt`).
+Test run: `python -m unittest tests.test_regressions tests.test_tr2 -v` → **24 tests, all OK** (needs only pandas and numpy).
 
 ## 2. Data acquired and verified
 
@@ -72,7 +72,7 @@ Test run: `python -m unittest discover -s tests -v` → **24 tests, all OK** (`t
 5. **Kaggle copy** was not compared with Zenodo. The GitHub data dictionary was not re-read in this run; cumulative semantics rest on the register-identity test above and the zip's own dictionary for TOTAL_IMPORT.
 6. **The ToU boundary 18:30–22:30** is confirmed empirically by the shift test for the 335,343 compared days, not from a written specification.
 7. **`DBE` meaning** is inferred (midnight register snapshot); the zip's dictionary does not define `obis`.
-8. `browser_full_scan.js` and the old `real_sample/` output belong to v1 and are superseded.
+8. `browser_full_scan.js` and the old `real_sample/` output belong to an earlier draft of the audit; they are superseded and are not included in this repository.
 
 ## 6. Reproduce
 
@@ -81,7 +81,7 @@ python3 -m venv .venv && .venv/bin/pip install pandas numpy
 .venv/bin/python -I peakwise_audit.py --zip data.zip --verify-md5 --out audit_out   # ~2 min, ~1 GB RAM
 .venv/bin/python -I probe_dbe.py --zip data.zip --out audit_out
 .venv/bin/python -I spot_check.py --zip data.zip --audit audit_out --n 40 --seed 7
-.venv/bin/python -m unittest discover -s tests -v
+.venv/bin/python -m unittest tests.test_regressions tests.test_tr2 -v
 ```
 
 Outputs in `audit_out/`: `audit_report.json`, `household_days_peak.csv` (every household-day with status), `peakwise_target_clean.csv` (valid days only: household_ID, date, peak_kwh_1830_2230, tr2_check), `tr2_crosscheck.csv`, `valid_days_per_household.csv`, `valid_households_per_date.csv`, `dbe_probe.json`.

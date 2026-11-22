@@ -1,0 +1,107 @@
+{
+  "features": [
+    "lag1",
+    "lag7",
+    "last_value",
+    "gap_days",
+    "roll7_median",
+    "roll28_median",
+    "roll28_iqr",
+    "roll28_frac_zero",
+    "roll7_n",
+    "roll28_n",
+    "expanding_median",
+    "dow",
+    "is_weekend",
+    "month"
+  ],
+  "filled_features": [
+    "lag1",
+    "lag7",
+    "last_value",
+    "gap_days",
+    "roll7_median",
+    "roll28_median",
+    "roll28_iqr",
+    "roll28_frac_zero",
+    "roll7_n",
+    "roll28_n",
+    "expanding_median",
+    "dow",
+    "is_weekend",
+    "month",
+    "lag1_missing",
+    "lag7_missing",
+    "roll7_median_missing"
+  ],
+  "specs": {
+    "xgb": {
+      "name": "xgb",
+      "kind": "xgb",
+      "objective": "reg:absoluteerror",
+      "target": "raw",
+      "rounds": 1500,
+      "params": {
+        "max_depth": 6,
+        "min_child_weight": 50.0,
+        "reg_lambda": 10.0,
+        "learning_rate": 0.05
+      }
+    },
+    "xgb_alt": {
+      "name": "xgb_alt",
+      "kind": "xgb",
+      "objective": "reg:squarederror",
+      "target": "log",
+      "rounds": 150,
+      "params": {
+        "max_depth": 6,
+        "min_child_weight": 50.0,
+        "reg_lambda": 1.0,
+        "learning_rate": 0.05
+      }
+    },
+    "rf": {
+      "name": "rf",
+      "kind": "rf",
+      "target": "raw",
+      "n_estimators": 300,
+      "params": {
+        "min_samples_leaf": 50,
+        "max_features": 0.4,
+        "max_samples": 0.5
+      }
+    },
+    "reference_baseline_cv": {
+      "cv_MAE": 0.418313143863541,
+      "cv_RMSE": 1.2522460738288441
+    }
+  },
+  "stack_inputs": [
+    "rf",
+    "xgb",
+    "xgb_alt",
+    "baseline_roll7"
+  ],
+  "stack_weights_for_test": {
+    "rf": 0.9476220936054179,
+    "xgb": 0.06329848018109197,
+    "xgb_alt": 0.0,
+    "baseline_roll7": 0.0
+  },
+  "stack_weights_for_validation": {
+    "rf": 0.9089067315591475,
+    "xgb": 0.0,
+    "xgb_alt": 0.10874142542119891,
+    "baseline_roll7": 0.0
+  },
+  "fit_window": [
+    "2023-10-02",
+    "2024-11-10"
+  ],
+  "versions": {
+    "xgboost": "2.1.4",
+    "pandas": "2.3.3",
+    "numpy": "2.0.2"
+  }
+}
