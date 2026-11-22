@@ -1,0 +1,118 @@
+{
+  "target_rows": 464640,
+  "households": 2931,
+  "date_range": [
+    "2023-10-01",
+    "2024-12-22"
+  ],
+  "horizon_days": 1,
+  "inclusion_rule": "roll28_n >= 1",
+  "rows_dropped_by_inclusion": 8657,
+  "rows_outside_split_windows": 0,
+  "history_threshold_counts": {
+    "1": 455983,
+    "3": 438180,
+    "7": 397104,
+    "14": 327716
+  },
+  "splits": {
+    "train": {
+      "dates": [
+        "2023-10-01",
+        "2024-09-30"
+      ],
+      "rows": 315079,
+      "households": 2899,
+      "y_mean": 1.461130193380073,
+      "y_median": 0.729,
+      "y_zero_share": 0.08182709733114553,
+      "missing_lag1_share": 0.041030979532117345,
+      "missing_lag7_share": 0.22778414302444783,
+      "median_gap_days": 1.0
+    },
+    "val": {
+      "dates": [
+        "2024-10-01",
+        "2024-11-10"
+      ],
+      "rows": 82500,
+      "households": 2677,
+      "y_mean": 1.2409104775757576,
+      "y_median": 0.732,
+      "y_zero_share": 0.07372121212121212,
+      "missing_lag1_share": 0.035115151515151516,
+      "missing_lag7_share": 0.08856969696969696,
+      "median_gap_days": 1.0,
+      "households_unseen_in_train": 26,
+      "rows_from_unseen_households": 125
+    },
+    "test": {
+      "dates": [
+        "2024-11-11",
+        "2024-12-22"
+      ],
+      "rows": 58404,
+      "households": 2120,
+      "y_mean": 1.170960251010205,
+      "y_median": 0.668,
+      "y_zero_share": 0.07883021710841723,
+      "missing_lag1_share": 0.014468187110471886,
+      "missing_lag7_share": 0.01707074857886446,
+      "median_gap_days": 1.0,
+      "households_unseen_in_train": 10,
+      "rows_from_unseen_households": 73
+    }
+  },
+  "features": {
+    "lag1": "yesterday's evening kWh (NaN if yesterday is not a valid household-day)",
+    "lag7": "same weekday last week, evening kWh (NaN if missing)",
+    "last_value": "most recent valid evening kWh on or before D-1 (never NaN once any history exists)",
+    "gap_days": "calendar days between D and that most recent valid evening (1 = yesterday)",
+    "roll7_median": "median evening kWh over the 7 calendar days D-7..D-1 (observed days only)",
+    "roll28_median": "median evening kWh over D-28..D-1: the household's recent level",
+    "roll28_iqr": "p75-p25 of the same window: how variable the household has been",
+    "roll28_frac_zero": "share of observed evenings in D-28..D-1 that are exactly 0 kWh",
+    "roll7_n": "number of observed evenings in D-7..D-1 (0-7): recent coverage",
+    "roll28_n": "number of observed evenings in D-28..D-1 (0-28): history depth",
+    "expanding_median": "median of every valid evening the household has up to D-1: long-run level",
+    "dow": "day of week of D (0 = Monday); known in advance",
+    "is_weekend": "1 if D is Saturday or Sunday; known in advance",
+    "month": "calendar month of D; known in advance"
+  },
+  "baselines": {
+    "global_median": "constant: median of the TRAINING targets",
+    "persistence_lag1": "yesterday's evening value (only where yesterday exists)",
+    "persistence_last": "last observed evening value, carried forward over gaps",
+    "seasonal_lag7": "same weekday last week (only where it exists)",
+    "roll7_median": "median of the last 7 calendar days' observed evenings",
+    "roll28_median": "median of the last 28 calendar days' observed evenings",
+    "expanding_median": "median of all of the household's past evenings"
+  },
+  "train_median_kwh": 0.729,
+  "cv_folds_inside_train": [
+    {
+      "train_rows": 186108,
+      "valid_rows": 36933,
+      "valid_dates": [
+        "2024-05-31",
+        "2024-07-10"
+      ]
+    },
+    {
+      "train_rows": 223041,
+      "valid_rows": 50849,
+      "valid_dates": [
+        "2024-07-11",
+        "2024-08-20"
+      ]
+    },
+    {
+      "train_rows": 273890,
+      "valid_rows": 41189,
+      "valid_dates": [
+        "2024-08-21",
+        "2024-09-30"
+      ]
+    }
+  ]
+}
