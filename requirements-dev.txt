@@ -1,0 +1,7 @@
+# Dependencies for the data audit and the exploratory notebook.
+# Extended in later commits.
+pandas>=2.0,<3
+numpy>=1.26,<3
+matplotlib>=3.8
+nbformat>=5.9
+nbclient>=0.9
