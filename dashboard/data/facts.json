@@ -96,6 +96,7 @@
     }
   },
   "target_median_kwh": 0.668,
+  "audited_median_kwh": 0.721,
   "target_zero_share_test": 0.07883021710841723,
   "cv_reference": {
     "cv_MAE": 0.418313143863541,

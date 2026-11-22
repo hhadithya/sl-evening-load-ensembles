@@ -25,6 +25,13 @@ outputs/eda/selected_households_raw.csv.gz
 outputs/phase1/model_table.csv.gz
 outputs/phase2/models/
 outputs/phase2/oof_predictions_cv.csv.gz
+outputs/phase2/model_costs.csv
+outputs/phase2/household_summary.csv
+outputs/phase2/deltas_validation_tr2_agree.csv
+
+# --- figures are embedded in the notebooks; raw tuning logs are summarised in TUNING_AND_AI_LOG.md (kept on disk)
+outputs/**/*.png
+outputs/phase2/tuning_log*.txt
 
 # --- household-level predictions carry the dataset's own IDs; the dashboard ships a pseudonymised copy instead
 outputs/phase2/predictions_val.csv.gz

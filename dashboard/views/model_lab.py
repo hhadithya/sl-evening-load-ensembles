@@ -67,7 +67,7 @@ def delta_chart(dl: pd.DataFrame, period: str) -> go.Figure:
 def render():
     f, man, specs = D.js("facts.json"), D.js("manifest.json"), D.js("best_specs.json")
     T.header("Model Lab", "Bagging, boosting and stacking",
-             "Three ways of combining many decision trees, how they were trained and compared, and what they cost.")
+             "Three ways of combining many decision trees, and how they compare.")
     t1, t2, t3, t4 = st.tabs(["How the models work", "Evaluation design", "Accuracy", "Cost and drivers"])
 
     with t1:
@@ -76,23 +76,20 @@ def render():
         with c[0]:
             st.markdown('<div class="pw-eyebrow">Random Forest</div>', unsafe_allow_html=True); st.markdown("### Bagging")
             st.markdown(diagrams.bagging(), unsafe_allow_html=True)
-            st.markdown("Many deep trees, each grown on a random half-sample of the history, then **averaged**. Averaging cancels each tree's noise, "
-                        "so it mainly reduces *variance*. Letting each split see only some features keeps the trees from being copies of each other.")
+            st.markdown("Many deep trees, each grown on a random sample of the history, then **averaged**. Averaging cancels each tree's noise (lower *variance*).")
             st.caption(f"Here: {rf['n_estimators']} trees, minimum leaf {rf['params']['min_samples_leaf']} rows, "
-                       f"{int(rf['params']['max_features'] * 100)}% of features per split, squared-error splitting.")
+                       f"{int(rf['params']['max_features'] * 100)}% of features per split.")
         with c[1]:
             st.markdown('<div class="pw-eyebrow">XGBoost</div>', unsafe_allow_html=True); st.markdown("### Boosting")
             st.markdown(diagrams.boosting(), unsafe_allow_html=True)
-            st.markdown("Shallow trees added **one after another**, each fitted to what the previous ones still get wrong, scaled by a small learning rate. "
-                        "It mainly reduces *bias*, but can overfit, so depth, regularisation and the number of rounds matter.")
+            st.markdown("Shallow trees added **one after another**, each fitted to what the previous ones still get wrong (lower *bias*, but it can overfit).")
             st.caption(f"Here: absolute-error loss (targets the median), depth {xg['params']['max_depth']}, {xg['rounds']:,} rounds, "
-                       f"learning rate {xg['params']['learning_rate']}, L2 penalty {xg['params']['reg_lambda']:g}.")
+                       f"learning rate {xg['params']['learning_rate']}.")
         with c[2]:
             st.markdown('<div class="pw-eyebrow">Meta-learner</div>', unsafe_allow_html=True); st.markdown("### Stacking")
             st.markdown(diagrams.stacking(), unsafe_allow_html=True)
-            st.markdown("A second-level model **learns how much to trust** each predictor. Its training data must be *out-of-fold*: "
-                        "predictions made by models that had not seen the rows they predict.")
-            st.caption("Here: a non-negative linear combination of Random Forest, both XGBoost variants and the 7-day median.")
+            st.markdown("A second-level model **learns how much to trust** each predictor, using *out-of-fold* predictions: made by models that had not seen the rows they predict.")
+            st.caption("Here: a non-negative linear combination of Random Forest, two XGBoost variants and the 7-day median.")
 
         st.markdown("### What the stacking meta-learner learned")
         wv, wt = man["stack_weights_for_validation"], man["stack_weights_for_test"]
@@ -104,29 +101,28 @@ def render():
             st.markdown(f'<table class="pw-table"><thead><tr><th>Input</th><th>Weights used on validation</th><th>Weights used on test</th></tr></thead><tbody>{rows}</tbody></table>',
                         unsafe_allow_html=True)
         with c2:
-            st.markdown("The weights are constrained to be **non-negative but not to sum to one**, so a sum slightly above one is allowed and is not an error. "
-                        "In both fits almost all weight sits on Random Forest, so the stack behaves like Random Forest with a small adjustment. "
-                        "The test column is fitted on more out-of-fold history (it includes the validation period).")
+            st.markdown("Weights are constrained to be **non-negative but not to sum to one**, so a sum slightly above one is not an error. "
+                        "Almost all weight sits on Random Forest, so the stack behaves like Random Forest with a small adjustment. "
+                        "The test fit also uses the validation period.")
 
     with t2:
         st.markdown("### Chronological training, validation and testing")
         T.plot(fold_timeline(f), 330, key="ml_folds")
         c1, c2 = st.columns(2, gap="large")
         with c1:
-            st.markdown("**Rules that keep the comparison honest**")
+            st.markdown("**What keeps the comparison honest**")
             st.markdown("""
-- Features of day D use only dates up to D−1. A test fails if corrupting future targets changes any past feature.
-- Hyperparameters were tuned only on three expanding chronological folds *inside the training period*.
-- Model families were compared on the validation period; the test period was read once, by models refitted on train and validation.
-- Stacking uses out-of-fold predictions from those chronological folds. The validation period is a fourth fold.
+- Features of day D use only dates up to D−1; a test fails if corrupting future targets changes any past feature.
+- Tuning used only three chronological folds *inside the training period*.
+- Models were compared on validation; the test period was read once, by models refitted on train + validation.
+- Stacking uses out-of-fold predictions from the chronological folds.
 """)
         with c2:
             st.markdown("**What this design does not prove**")
             st.markdown(f"""
-- The test baselines were already visible in the earlier feature-and-baseline phase, so the test period is not blind for the baselines.
-- Evaluation covers households that appear in the fitting data. {f['val_unseen_rows']} validation rows ({f['val_unseen_households']} households) were absent from training and are
-  excluded from the headline numbers; the test period has none.
-- Validation and test are six-week windows, so they cannot show seasonality.
+- Test baselines were already visible earlier, so the test period is not blind for the baselines.
+- Only households seen in training are evaluated ({f['val_unseen_rows']} validation rows from {f['val_unseen_households']} unseen households are reported separately).
+- Validation and test are six-week windows: no seasonality.
 """)
 
     with t3:
@@ -135,27 +131,20 @@ def render():
         m = D.metrics(period)
         cols = [("MAE", "MAE (kWh)", lambda v: f"{v:.4f}", "metric"), ("RMSE", "RMSE (kWh)", lambda v: f"{v:.4f}", "metric"),
                 ("MedAE", "Median error (kWh)", lambda v: f"{v:.4f}", "metric"),
-                ("hh_MAE_mean", "Household MAE, mean", lambda v: f"{v:.4f}", "metric"),
-                ("hh_MAE_median", "Household MAE, median", lambda v: f"{v:.4f}", "metric"),
                 ("MAE_vs_ref_%", "MAE vs baseline", fmt_pct, "delta"), ("RMSE_vs_ref_%", "RMSE vs baseline", fmt_pct, "delta")]
-        st.markdown(results_table(m, D.MAIN + ["xgb_alt"], cols), unsafe_allow_html=True)
+        st.markdown(results_table(m, D.MAIN, cols), unsafe_allow_html=True)
         st.caption(f"{int(m.loc['rf', 'n']):,} household-days from {int(m.loc['rf', 'n_households']):,} households. Bold = lowest in the column. "
-                   "Household MAE is each household's own average miss, then averaged (mean) or taken at the middle (median) across households, "
-                   "so a few large consumers cannot dominate it.")
-        st.markdown("### How much of the difference could be chance?")
+                   "MAE is the typical miss in kWh, RMSE penalises large misses, median error ignores the tail.")
+        st.markdown("### Could the difference be chance?")
         T.plot(delta_chart(D.deltas(), period), 300, key=f"ml_delta_{period}")
-        st.caption("Model minus the 7-day median, with 95% intervals from resampling **households** (not rows, which are strongly dependent). "
-                   "Left of the line = better than the baseline; an interval that crosses the line is not distinguishable from no change.")
-        with st.expander("What the metrics mean for an evening's energy"):
-            st.markdown("""
-- **MAE** is the typical size of a miss in kWh over the 4-hour window. **RMSE** squares misses first, so a few very large errors dominate it. Comparing the two shows how concentrated the errors are.
-- **Median error** ignores the tail completely: half of all forecasts miss by less than this.
-- Energy in kWh over four hours divided by four gives the average power in kW. These are not peak-power forecasts.
-""")
-        with st.expander("Other baselines on the same rows"):
-            other = ["base_global_median", "base_persistence", "base_seasonal_lag7", "base_roll28_median", "base_expanding_median", D.BASE]
-            st.markdown(results_table(m, other, cols[:3] + cols[5:]), unsafe_allow_html=True)
-            st.caption("Every baseline answers on every row through an explicit fallback (for example, persistence uses the last observed evening when yesterday is missing).")
+        st.caption("Model minus the 7-day median, with 95% intervals from resampling **households**. Left of the line = better; an interval crossing the line is not distinguishable from no change.")
+        with st.expander("More detail: household-level errors, the second XGBoost and other baselines"):
+            more = ["xgb_alt", "base_global_median", "base_persistence", "base_seasonal_lag7", "base_roll28_median", "base_expanding_median", D.BASE]
+            cols2 = cols[:3] + [("hh_MAE_mean", "Household MAE, mean", lambda v: f"{v:.4f}", "metric"),
+                                ("hh_MAE_median", "Household MAE, median", lambda v: f"{v:.4f}", "metric")] + cols[3:]
+            st.markdown(results_table(m, more, cols2), unsafe_allow_html=True)
+            st.caption("Household MAE is each household's own average miss, averaged (mean) or taken at the middle (median), so large consumers cannot dominate it. "
+                       "Every baseline answers on every row through an explicit fallback. Energy in kWh over four hours divided by four is the average power in kW; these are not peak-power forecasts.")
 
     with t4:
         st.markdown("### Cost and complexity")
@@ -171,9 +160,8 @@ def render():
                  "roughly the sum of the rows above. Not timed separately.</td></tr>")
         st.markdown('<table class="pw-table"><thead><tr><th>Model</th><th>Trees</th><th>Training (s)</th><th>Tuning per setting (s)</th><th>Saved size (MB)</th>'
                     f'<th>Predict 1,000 rows (ms)</th><th>Predict 1 row (ms)</th></tr></thead><tbody>{rows}</tbody></table>', unsafe_allow_html=True)
-        st.caption("Measured on one 10-core laptop; training time is the fit on the training period (315,079 rows) and size is the refitted model on disk. "
-                   "Random Forest latency is single-threaded (its multi-threaded single-row time is dominated by thread start-up). "
-                   "All of these are far below anything a dashboard would notice; the practical cost is complexity, not speed.")
+        st.caption("Measured on one laptop; training time is the fit on the training period (315,079 rows). Random Forest latency is single-threaded. "
+                   "Speed is not an issue for a dashboard; the practical cost is complexity.")
 
         st.markdown("### What the models rely on")
         imp = D.csv("permutation_importance.csv")
@@ -184,8 +172,7 @@ def render():
                                hovertemplate="%{y}<br>+%{x:.4f} kWh MAE when shuffled<extra></extra>"))
         fig.update_layout(xaxis_title="Increase in test MAE when the feature is shuffled (kWh)", yaxis=dict(showgrid=False), margin=dict(l=8, r=8, t=8, b=8))
         T.plot(fig, 430, key=f"imp_{which}")
-        st.caption(f"Permutation importance, computed once on the **test period** ({f['test_rows']:,} household-days) with the saved final models. "
-                   f"Baseline MAE for this model: {g.baseline_mae.iloc[0]:.4f} kWh. Descriptive only: nothing was selected or tuned with it.")
-        T.note("<b>Reading it carefully.</b> The recent-level features (7-day median, last observed evening, 28-day median, yesterday) carry almost all of the signal for both models. "
-               "They are strongly correlated with each other, so shuffling one while the others remain lets the model partly compensate: individual bars understate how "
-               "much the <i>group</i> matters and should not be read as causal effects. Calendar features contribute almost nothing, which agrees with the weak weekday pattern in the data.")
+        st.caption(f"Permutation importance on the **test period** ({f['test_rows']:,} household-days), saved final models, baseline MAE {g.baseline_mae.iloc[0]:.4f} kWh. "
+                   "Descriptive only: nothing was tuned with it.")
+        T.note("<b>Reading it carefully.</b> The recent-level features (7-day median, last observed evening, 28-day median, yesterday) carry almost all the signal. "
+               "They are strongly correlated, so single bars understate the <i>group</i> and are not causal effects. Calendar features contribute almost nothing.")

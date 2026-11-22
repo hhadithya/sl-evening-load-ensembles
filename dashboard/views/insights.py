@@ -26,7 +26,7 @@ def band_chart(b: pd.DataFrame) -> go.Figure:
 def render():
     f, man = D.js("facts.json"), D.js("manifest.json")
     T.header("Insights and limitations", "Where the models help, where they do not",
-             "What the saved results show about different kinds of evenings and households, kept apart from the explanations we can only suggest.")
+             "What the saved results show about different evenings and households, separate from explanations that are only suggestions.")
 
     # ------------------------------------------------------------------ by consumption range
     st.markdown("## Different consumption ranges")
@@ -34,19 +34,16 @@ def render():
                       format_func=lambda p: "Test" if p == "test" else "Validation")
     b = D.bands(period)
     T.plot(band_chart(b), 400, key=f"ins_band_{period}")
-    st.caption("Bands use percentiles of the training-period target. Below 1 = better than the 7-day median in that band. "
-               "n = household-days in the band; hh = distinct households.")
+    st.caption("Bands use training-period percentiles. Below 1 = better than the 7-day median. n = household-days, hh = households.")
     z, lo, ty, ex = b.loc["exactly 0"], b.loc["low (<P25)"], b.loc["typical (P25-P75)"], b.loc["extreme (>P99)"]
     st.markdown(f"""
 **Observed ({period}).**
 - *Typical evenings (middle 50%):* all three ensembles beat the baseline (MAE {ty['MAE rf']:.3f} Random Forest, {ty['MAE xgb']:.3f} XGBoost, {ty['MAE stack']:.3f} stacking, against {ty[f'MAE {D.BASE}']:.3f}).
-- *Exactly-zero evenings:* the baseline misses by {z[f'MAE {D.BASE}']:.3f} kWh, Random Forest by {z['MAE rf']:.3f} and stacking by {z['MAE stack']:.3f}; XGBoost with its median-targeting loss does best ({z['MAE xgb']:.3f}).
-  Random Forest and stacking are also worse than the baseline on the lowest quarter of evenings ({lo['MAE rf']:.3f} and {lo['MAE stack']:.3f} against {lo[f'MAE {D.BASE}']:.3f}).
-- *Unusually high evenings (above the 99th percentile):* every model under-forecasts heavily (mean error {ex[f'bias {D.BASE}']:+.1f} kWh baseline, {ex['bias rf']:+.1f} Random Forest, {ex['bias xgb']:+.1f} XGBoost),
-  and the ensembles are no better than the baseline (MAE {ex[f'MAE {D.BASE}']:.2f} baseline, {ex['MAE rf']:.2f} Random Forest, {ex['MAE xgb']:.2f} XGBoost). This band is only {int(ex.n):,} household-days from {int(ex.households)} households, so the size of the gap is uncertain; the direction is the warning.
+- *Exactly-zero and low evenings:* Random Forest and stacking are worse than the baseline ({z['MAE rf']:.3f} and {z['MAE stack']:.3f} against {z[f'MAE {D.BASE}']:.3f} on zero days); XGBoost does best ({z['MAE xgb']:.3f}).
+- *Unusually high evenings (above the 99th percentile):* every model under-forecasts heavily (mean error {ex[f'bias {D.BASE}']:+.1f} kWh baseline, {ex['bias rf']:+.1f} Random Forest, {ex['bias xgb']:+.1f} XGBoost) and the ensembles are no better (MAE {ex[f'MAE {D.BASE}']:.2f}, {ex['MAE rf']:.2f}, {ex['MAE xgb']:.2f}). Only {int(ex.n):,} household-days from {int(ex.households)} households: the direction is the warning, not the size.
 """)
-    T.note("<b>Possible explanation (not tested).</b> Very high evenings are rare and probably not predictable from a household's own recent past, so models trained to minimise average error "
-           "predict a typical level for them. Models cannot commit to exactly zero, which may explain the small positive forecasts on empty evenings.")
+    T.note("<b>Possible explanation (not tested).</b> Very high evenings are rare and probably not predictable from a household's own recent past, so models predict a typical level for them. "
+           "Models also cannot commit to exactly zero, which may explain the small positive forecasts on empty evenings.")
 
     # ------------------------------------------------------------------ household breadth
     st.markdown("## Is the improvement widespread across households?")
@@ -67,9 +64,8 @@ def render():
     share = {k: 100 * (he[f"d_{k}"] < 0).mean() for k in ("rf", "xgb", "stack")}
     worst10, best10 = he.tot_rf.nlargest(10).sum(), he.tot_rf.nsmallest(10).sum()
     st.markdown(f"""
-**Observed (test, {len(he):,} households).** {share['rf']:.0f}% of households have a lower MAE with Random Forest than with the baseline, {share['xgb']:.0f}% with XGBoost and {share['stack']:.0f}% with stacking;
-the median household's MAE changes by {he.d_rf.median():+.4f} kWh (Random Forest). The effect is small for most households and not one-directional: the ten households Random Forest serves worst add
-{worst10:.0f} kWh of absolute error, more than the ten it serves best remove ({-best10:.0f} kWh). So the gain is broad but thin, and a handful of households can offset part of it.
+**Observed (test, {len(he):,} households).** {share['rf']:.0f}% of households improve with Random Forest, {share['xgb']:.0f}% with XGBoost and {share['stack']:.0f}% with stacking; the median household's MAE changes by {he.d_rf.median():+.4f} kWh (Random Forest). 
+The ten households Random Forest serves worst add {worst10:.0f} kWh of absolute error, more than the ten it serves best remove ({-best10:.0f} kWh). The gain is broad but thin.
 """)
 
     # ------------------------------------------------------------------ stacking
@@ -80,16 +76,15 @@ the median household's MAE changes by {he.d_rf.median():+.4f} kWh (Random Forest
     with c1:
         st.markdown(f"""
 **Observed.**
-- Stacking MAE {mt.loc['stack', 'MAE']:.4f} vs Random Forest {mt.loc['rf', 'MAE']:.4f} on test ({mv.loc['stack', 'MAE']:.4f} vs {mv.loc['rf', 'MAE']:.4f} on validation); RMSE {mt.loc['stack', 'RMSE']:.4f} vs {mt.loc['rf', 'RMSE']:.4f} on test.
-- The meta-learner's weights put {wt['rf']:.2f} (test fit) and {wv['rf']:.2f} (validation fit) on Random Forest. The weights are non-negative and are not forced to sum to one; they sum to {sum(wt.values()):.3f} and {sum(wv.values()):.3f}.
-- A plain equal-weight average, which was not a candidate, has the lowest validation MAE of any row ({mv.loc['stack_equal_avg', 'MAE']:.4f}) but not on test ({mt.loc['stack_equal_avg', 'MAE']:.4f}).
+- Test MAE {mt.loc['stack', 'MAE']:.4f} for stacking vs {mt.loc['rf', 'MAE']:.4f} for Random Forest ({mv.loc['stack', 'MAE']:.4f} vs {mv.loc['rf', 'MAE']:.4f} on validation).
+- The meta-learner put {wt['rf']:.2f} (test fit) and {wv['rf']:.2f} (validation fit) of its weight on Random Forest. Weights are non-negative and not forced to sum to one (sums {sum(wt.values()):.3f} and {sum(wv.values()):.3f}).
+- An equal-weight average (not a candidate) has the lowest validation MAE of any row ({mv.loc['stack_equal_avg', 'MAE']:.4f}) but not on test ({mt.loc['stack_equal_avg', 'MAE']:.4f}).
 """)
     with c2:
         st.markdown("""
 **Possible explanations (not tested).**
-- All base models see the same few features, so their errors are strongly correlated and there is little for a second level to combine.
-- The meta-learner minimises squared error, which favours the model that is best in squared error (Random Forest), while the score here is mainly MAE. A meta-learner trained on absolute error was not tried.
-- The signal left after the household's own recent level is weak, so every flexible model hits the same ceiling.
+- All base models see the same few features, so their errors are highly correlated and a second level has little to combine.
+- The meta-learner minimises squared error, favouring Random Forest, while the score is mainly MAE. An absolute-error meta-learner was not tried.
 """)
 
     # ------------------------------------------------------------------ limitations
@@ -97,27 +92,27 @@ the median household's MAE changes by {he.d_rf.median():+.4f} kWh (Random Forest
     tr = f["tr2_by_period"]
     rows = [
         ("Missing and irregular data",
-         f"About {f['missing_quarter_hours_pct']:.0f}% of quarter-hours inside household histories are missing, mostly as whole days. There is almost no usable data from mid-January to March 2024. Gaps are never imputed.",
-         "Data-collection outages (the gaps line up across households). Not verified."),
-        ("No meter cross-check on the test period",
-         f"The audit compares extracted evening energy with the meter's own peak-period register (TR2). That register has no usable bracket after 31 Oct 2024, so all {tr['test'].get('no_bracket', 0):,} test rows are unverified. "
-         f"On validation, {tr['validation'].get('agree', 0):,} rows agree, and that subset is confounded with the calendar month.",
-         "A change in the six-hour data feed. Not investigated."),
+         f"About {f['missing_quarter_hours_pct']:.0f}% of quarter-hours are missing, mostly whole days (almost none from mid-January to March 2024). Nothing is imputed.",
+         "Probably collection outages. Not verified."),
+        ("No meter cross-check on test",
+         f"The meter's TR2 register has no usable bracket after 31 Oct 2024, so all {tr['test'].get('no_bracket', 0):,} test rows are unverified. "
+         f"On validation, {tr['validation'].get('agree', 0):,} rows agree, but that subset is confounded with the month.",
+         "A change in the six-hour feed. Not investigated."),
         ("Previously observed households only",
-         f"The experiment forecasts the future of households that appear in the fitting data. {f['val_unseen_rows']} validation rows ({f['val_unseen_households']} households) came from households absent from training and are reported separately; the test period has none.",
-         "Performance for brand-new households is unknown."),
+         f"Only households in the fitting data are forecast. {f['val_unseen_rows']} validation rows ({f['val_unseen_households']} households) were unseen; the test period has none.",
+         "Performance for new households is unknown."),
         ("Short evaluation windows",
-         "Validation and test are six weeks each, recent and fairly dense. They cannot reveal seasonality and are probably easier than an average stretch of the dataset.",
-         "A longer record would give wider, more honest intervals."),
+         "Validation and test are six weeks each, recent and fairly dense: no seasonality, probably easier than average.",
+         "A longer record would give more honest intervals."),
         ("Extreme evenings",
-         "The highest household-days pass every audit rule but are few and concentrated in a small number of households. Conclusions about them are low-confidence.",
-         "Some may be shared or commercial-like loads. Not investigated."),
+         "The highest household-days pass every audit rule but are few and concentrated in a few households.",
+         "Possibly shared or commercial-like loads. Not investigated."),
         ("Model complexity",
-         f"Random Forest is the largest artefact and stacking runs three models, for a test MAE change of {mt.loc['rf', 'MAE_vs_ref_%']:+.1f}% (Random Forest) against the baseline. Speed is not an issue; interpretability and upkeep are.",
-         "A rolling median may be the more defensible tool where simplicity matters."),
+         f"Random Forest changes test MAE by {mt.loc['rf', 'MAE_vs_ref_%']:+.1f}% against the baseline, and stacking runs three models.",
+         "A rolling median may be more defensible where simplicity matters."),
         ("What is forecast",
-         "Energy over a four-hour window in kWh for the next day, not instantaneous peak power in kW, and not a live signal.",
-         "Peak-power forecasting would need different data and targets."),
+         "Next-day energy over four hours in kWh, not instantaneous peak power in kW, and not a live signal.",
+         "Peak-power forecasting needs different data."),
     ]
     body = "".join(f"<tr><td><b>{a}</b></td><td>{b_}</td><td>{c_}</td></tr>" for a, b_, c_ in rows)
     st.markdown(f'<table class="pw-table pw-two"><thead><tr><th style="width:18%">Topic</th><th>What the results show</th><th style="width:28%">Possible explanation or consequence</th></tr></thead>'
@@ -125,8 +120,8 @@ the median household's MAE changes by {he.d_rf.median():+.4f} kWh (Random Forest
 
     st.markdown("## Provenance and privacy")
     st.markdown(f"""
-- **Data:** RECON-SL residential electricity dataset (LIRNEasia), {f['license']}. The dashboard reads about 2 MB of saved results; the multi-gigabyte raw data and the models are not needed to run it.
-- **Everything shown is a saved experiment output** (metrics, predictions, tuning and cost tables) produced by the Phase 1 and Phase 2 code and tests in this repository. No figure is typed in or recomputed at start-up.
-- **Privacy:** household identifiers are replaced by salted-hash labels, no addresses or survey data are included, and the Forecast Explorer shows individual histories only for the test period. For a public deployment, consider limiting it to the aggregate view.
-- **Implementation:** written with AI assistance (Claude Code) under the project owner's direction; design choices and tuning decisions are recorded in `outputs/phase2/TUNING_AND_AI_LOG.md`.
+- **Data:** RECON-SL residential electricity dataset (LIRNEasia), {f['license']}. The dashboard reads about 1 MB of saved results; the raw data and models are not needed.
+- **Everything shown is a saved experiment output** produced by the code and tests in this repository; no figure is typed in or recomputed at start-up.
+- **Privacy:** household identifiers are replaced by salted-hash labels (pseudonymised, not anonymous); no addresses or survey data are included, and individual histories are shown only for the test period.
+- **Implementation:** written with AI assistance (Claude Code) under the project owner's direction; decisions are recorded in `outputs/phase2/TUNING_AND_AI_LOG.md`.
 """)

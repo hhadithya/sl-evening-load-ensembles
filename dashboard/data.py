@@ -12,9 +12,9 @@ import streamlit as st
 ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = Path(os.environ.get("PEAKWISE_DATA_DIR", ROOT / "dashboard" / "data"))
 
-REQUIRED = ["metrics_validation.csv", "metrics_test.csv", "deltas_vs_baseline.csv", "deltas_validation_tr2_agree.csv",
-            "bands_validation.csv", "bands_test.csv", "household_summary.csv", "household_errors.csv",
-            "model_costs_with_latency.csv", "tuning_results.csv", "permutation_importance.csv",
+REQUIRED = ["metrics_validation.csv", "metrics_test.csv", "deltas_vs_baseline.csv",
+            "bands_validation.csv", "bands_test.csv", "household_errors.csv",
+            "model_costs_with_latency.csv", "permutation_importance.csv",
             "predictions_test_pseudonymized.csv.gz", "facts.json", "examples.json", "manifest.json", "best_specs.json"]
 
 BASE = "base_roll7_median"

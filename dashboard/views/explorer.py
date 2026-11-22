@@ -40,13 +40,11 @@ def error_chart(h: pd.DataFrame, model: str) -> go.Figure:
 
 def render():
     T.header("Forecast Explorer", "Saved test-period forecasts against what was observed",
-             "Every point below is a historical household-evening from the test period, with the forecast the saved model made for it. "
-             "Nothing here is a live forecast.")
+             "Each point is a historical household-evening from the test period. Nothing here is a live forecast.")
     p = D.predictions()
     ex = D.js("examples.json")
     d0, d1 = p.date.min().date(), p.date.max().date()
-    T.note(f"Test period {d0:%d %b} – {d1:%d %b %Y}. Household labels are pseudonymised. Days where the household's evening could not be audited "
-           "are simply absent: lines break rather than drawing a missing day as zero.")
+    T.note(f"Test period {d0:%d %b} – {d1:%d %b %Y}. Household labels are pseudonymised. Days without an audited evening are absent: lines break instead of drawing a zero.")
 
     c1, c2, c3 = st.columns([1.1, 1.3, 1.4], gap="large")
     model = c1.radio("Model", list(CHOICES), format_func=CHOICES.get, key="ex_model")
@@ -73,12 +71,12 @@ def render():
             m[2].metric(f"{CHOICES[model]} MAE", f"{e_m.mean():.3f} kWh", delta=f"{e_m.mean() - e_b.mean():+.3f} vs baseline", delta_color="inverse")
             m[3].metric("Mean error (bias)", f"{(h[model] - h.y).mean():+.3f} kWh", help="Forecast minus observed, averaged. Negative = under-forecasting on average.")
             if len(h) < 20:
-                T.note(f"Only {len(h)} days are shown. Error summaries for so few days are noisy; do not read them as a model's quality for this household.", "caution")
+                T.note(f"Only {len(h)} days shown: error summaries this small are noisy.", "caution")
             T.plot(household_chart(h, model), 360, key="ex_hh_chart")
             with st.expander("Forecast errors for each day"):
                 T.plot(error_chart(h, model), 280, key="ex_err_chart")
-                st.caption("Positive = forecast above what was observed. Grey bars are the 7-day median baseline for comparison.")
-            st.caption("One household is an illustration, not evidence about the model. Across all households the gain over the baseline is small (see Insights and Limitations).")
+                st.caption("Positive = forecast above observed. Grey bars: the 7-day median baseline.")
+            st.caption("One household is an illustration, not evidence about the model; across households the gain over the baseline is small (see Insights).")
 
     with tab2:
         if win.empty:
@@ -98,8 +96,7 @@ def render():
                                      customdata=day.n, hovertemplate="%{y:.3f} kWh over %{customdata:,} households<extra>Observed</extra>"))
             fig.update_layout(yaxis=dict(title="Mean energy 18:30–22:30 (kWh per household)", rangemode="tozero"), xaxis=dict(tickformat="%d %b"), hovermode="x unified")
             T.plot(fig, 330, key="ex_agg")
-            st.caption("Daily average across households. The households contributing change from day to day (the number is in the hover text), "
-                       "so movements in the average partly reflect who is reporting.")
+            st.caption("Daily average across households. Which households report changes from day to day (see hover), so movements partly reflect who is reporting.")
             cap = float(np.quantile(np.concatenate([e_m, e_b]), 0.99))
             hist = go.Figure()
             for lab, err, col in ((D.NAMES[D.BASE], e_b, T.COLORS[D.BASE]), (CHOICES[model], e_m, T.COLORS[model])):
@@ -108,4 +105,4 @@ def render():
             hist.update_layout(barmode="overlay", xaxis_title="Absolute forecast error (kWh); the last bar includes the largest 1%", yaxis_title="Share of household-days (%)")
             st.markdown("**How large are the errors?**")
             T.plot(hist, 300, key="ex_hist")
-            st.caption("Most evenings are forecast within a fraction of a kWh by both methods; the difference between them is small compared with the spread of the errors.")
+            st.caption("Most evenings are forecast within a fraction of a kWh by both methods; the gap between them is small next to the spread of errors.")

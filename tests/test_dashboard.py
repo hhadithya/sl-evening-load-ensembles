@@ -85,8 +85,7 @@ class Artifacts(unittest.TestCase):
 @unittest.skipUnless((P2 / "metrics_test.csv").exists(), "Phase 2 outputs not present")
 class NumbersAreCopiesOfSavedResults(unittest.TestCase):
     def test_metric_tables_are_identical_to_phase2(self):
-        for f in ("metrics_test.csv", "metrics_validation.csv", "deltas_vs_baseline.csv", "bands_test.csv", "bands_validation.csv",
-                  "household_summary.csv", "tuning_results.csv"):
+        for f in ("metrics_test.csv", "metrics_validation.csv", "deltas_vs_baseline.csv", "bands_test.csv", "bands_validation.csv"):
             pd.testing.assert_frame_equal(pd.read_csv(DATA / f), pd.read_csv(P2 / f), obj=f)
 
     def test_predictions_match_phase2_row_for_row(self):

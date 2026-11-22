@@ -43,9 +43,8 @@ P1 = ROOT / "outputs/phase1"
 OUT = ROOT / "dashboard/data"
 SALT = os.environ.get("PEAKWISE_SALT") or secrets.token_hex(16)     # secret; never written to disk
 MODELS = ["rf", "xgb", "xgb_alt", "stack"]
-COPY = ["metrics_validation.csv", "metrics_test.csv", "deltas_vs_baseline.csv", "deltas_validation_tr2_agree.csv",
-        "bands_validation.csv", "bands_test.csv", "household_summary.csv", "model_costs_with_latency.csv",
-        "tuning_results.csv", "best_specs.json"]
+COPY = ["metrics_validation.csv", "metrics_test.csv", "deltas_vs_baseline.csv",
+        "bands_validation.csv", "bands_test.csv", "model_costs_with_latency.csv", "best_specs.json"]
 
 
 def anon(ids) -> dict:
@@ -148,7 +147,8 @@ def main():
         "val_unseen_households": int(pv.loc[~pv.seen_in_fit, "household_ID"].nunique()),
         "test_unseen_rows": int((~pt.seen_in_fit).sum()),
         "tr2_by_period": {k: {c: int(v) for c, v in r.items()} for k, r in tr2.iterrows()},
-        "target_median_kwh": float(pt.y.median()), "target_zero_share_test": float((pt.y == 0).mean()),
+        "target_median_kwh": float(pt.y.median()), "audited_median_kwh": audit["peak"]["quantiles_kwh"]["0.5"],
+        "target_zero_share_test": float((pt.y == 0).mean()),
         "cv_reference": specs["reference_baseline_cv"], "license": "CC BY 4.0 (Zenodo record 15023048)",
     }
     (OUT / "facts.json").write_text(json.dumps(facts, indent=2, default=str))
