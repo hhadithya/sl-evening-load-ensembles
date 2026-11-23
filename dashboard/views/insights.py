@@ -123,5 +123,5 @@ The ten households Random Forest serves worst add {worst10:.0f} kWh of absolute 
 - **Data:** RECON-SL residential electricity dataset (LIRNEasia), {f['license']}. The dashboard reads about 1 MB of saved results; the raw data and models are not needed.
 - **Everything shown is a saved experiment output** produced by the code and tests in this repository; no figure is typed in or recomputed at start-up.
 - **Privacy:** household identifiers are replaced by salted-hash labels (pseudonymised, not anonymous); no addresses or survey data are included, and individual histories are shown only for the test period.
-- **Implementation:** written with AI assistance (Claude Code) under the project owner's direction; decisions are recorded in `outputs/phase2/TUNING_AND_AI_LOG.md`.
+- **Implementation:** written with AI assistance (Claude Code) under the project owner's direction; decisions are recorded in `artifacts/phase2/TUNING_AND_AI_LOG.md`.
 """)

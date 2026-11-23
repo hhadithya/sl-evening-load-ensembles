@@ -13,7 +13,7 @@ from pathlib import Path
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import peakwise_audit as pa            # noqa: E402
 from synth import day_rows, row6, build_zip  # noqa: E402

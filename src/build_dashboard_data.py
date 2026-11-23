@@ -5,7 +5,7 @@ Build the small, pseudonymised artifact set that the PeakWise dashboard reads.
 The dashboard itself needs no raw data, no models and no retraining: everything it shows is copied or
 aggregated from the saved Phase 1 / Phase 2 outputs by this script, which you only re-run if those change.
 
-    python build_dashboard_data.py            # writes dashboard/data/
+    python src/build_dashboard_data.py            # writes dashboard/data/
 
 What it does
   * copies saved metric / delta / band / household / cost / tuning tables unchanged,
@@ -37,9 +37,10 @@ import xgboost as xgb
 import phase1
 import phase2
 
-ROOT = Path(__file__).resolve().parent
-P2 = ROOT / "outputs/phase2"
-P1 = ROOT / "outputs/phase1"
+ROOT = Path(__file__).resolve().parent.parent
+P2 = ROOT / "artifacts/phase2"
+P1 = ROOT / "artifacts/phase1"
+MODEL_DIR = ROOT / "artifacts/models"
 OUT = ROOT / "dashboard/data"
 SALT = os.environ.get("PEAKWISE_SALT") or secrets.token_hex(16)     # secret; never written to disk
 MODELS = ["rf", "xgb", "xgb_alt", "stack"]
@@ -83,7 +84,7 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     for f in COPY:
         shutil.copy(P2 / f, OUT / f)
-    shutil.copy(P2 / "models/manifest.json", OUT / "manifest.json")
+    shutil.copy(MODEL_DIR / "manifest.json", OUT / "manifest.json")
 
     # ---- predictions (test) with pseudonymised ids
     pt = pd.read_csv(P2 / "predictions_test.csv.gz", parse_dates=["date"])
@@ -119,19 +120,19 @@ def main():
     test = m[m.split == "test"].reset_index(drop=True)
     y = test["y"].to_numpy()
     imp = []
-    rf = joblib.load(P2 / "models/rf.joblib"); rf.set_params(n_jobs=phase2.N_JOBS)
+    rf = joblib.load(MODEL_DIR / "rf.joblib"); rf.set_params(n_jobs=phase2.N_JOBS)
     Xr = phase2.design(test, "rf"); cols = phase1.FILLED_FEATURES
     flag = {"lag1": "lag1_missing", "lag7": "lag7_missing", "roll7_median": "roll7_median_missing"}
     groups = {f: [cols.index(f)] + ([cols.index(flag[f])] if f in flag else []) for f in phase1.FEATURES}
     imp.append(permutation_importance(rf, specs["rf"], Xr, y, groups).assign(model="rf"))
-    xm = xgb.XGBRegressor(); xm.load_model(str(P2 / "models/xgb.ubj"))
+    xm = xgb.XGBRegressor(); xm.load_model(str(MODEL_DIR / "xgb.ubj"))
     Xx = phase2.design(test, "xgb")
     imp.append(permutation_importance(xm, specs["xgb"], Xx, y, {f: [i] for i, f in enumerate(phase1.FEATURES)}).assign(model="xgb"))
     pd.concat(imp).to_csv(OUT / "permutation_importance.csv", index=False)
 
     # ---- facts for the Overview
     p1 = json.loads((P1 / "phase1_summary.json").read_text())
-    audit = json.loads((ROOT / "audit_out/audit_report.json").read_text())
+    audit = json.loads((ROOT / "artifacts/audit/audit_report.json").read_text())
     tr2 = pd.crosstab(pd.concat([pv.assign(period="validation"), pt.assign(period="test")], ignore_index=True)["period"],
                       pd.concat([pv, pt], ignore_index=True)["tr2_check"])
     facts = {

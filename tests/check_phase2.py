@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Correctness checks for Phase 2 stacking and evaluation.   python check_phase2.py
+"""Correctness checks for Phase 2 stacking and evaluation.   python tests/check_phase2.py
 
 The stacking tests are the important ones. They use light model settings on a real-data subsample so
 they run in about a minute, but exercise the very same `stack_pipeline` that produced the results.
@@ -11,6 +11,9 @@ import unittest
 import numpy as np
 import pandas as pd
 
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 import phase1
 import phase2
 
@@ -160,7 +163,7 @@ class SavedArtifactsAreConsistent(unittest.TestCase):
     def test_saved_predictions_match_recomputed_metrics(self):
         f = phase2.OUT / "predictions_test.csv.gz"
         if not f.exists():
-            self.skipTest("run `python phase2.py all` first")
+            self.skipTest("run `python src/phase2.py all` first")
         pt = pd.read_csv(f)
         self.assertEqual(int(pt[["rf", "xgb", "xgb_alt", "stack", "base_roll7_median"]].isna().sum().sum()), 0)
         self.assertTrue((pt.split == "test").all())

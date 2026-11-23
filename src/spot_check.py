@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Independent spot check: recompute the 18:30-22:30 consumption for randomly chosen household-days straight from the
 raw 15-minute CSVs (no shared code with peakwise_audit.py besides pandas) and compare with household_days_peak.csv.
-Usage: python -I spot_check.py --zip data.zip --audit audit_out --n 40 --seed 7"""
+Usage: python -I src/spot_check.py --zip data.zip --audit artifacts/audit --n 40 --seed 7"""
 import argparse, io, zipfile
 from pathlib import Path
 import numpy as np, pandas as pd

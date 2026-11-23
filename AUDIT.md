@@ -29,7 +29,7 @@ Test run: `python -m unittest tests.test_regressions tests.test_tr2 -v` → **24
 
 **Duplicates.** Duplicate household-timestamp rows: **0** (so 0 exact, 0 conflicting, 0 across files). No household-day spans two files (files split at day boundaries).
 
-**`obis`.** 45,585,961 rows are `LP`; **27,319 are `DBE`**. DBE rows exist only for 2024-03-28…2024-11-01, 1,205 households, and only at 00:00 (27,312 at `00:00:00`, 7 at `00:00:01`). None shares a slot with an LP row. Where both neighbours exist (8,029 cases), the DBE import value lies between the LP readings at 23:45 and 00:15 in 7,996 (99.6%), so it is the same cumulative register (`probe_dbe.py`, `audit_out/dbe_probe.json`). They are kept in the register series. They are outside 18:30–22:30 and cannot change the target. They do create **18,522 household-days that have only a DBE row** (no LP reading); those appear in the table as `missing_reading` and are counted separately in the report.
+**`obis`.** 45,585,961 rows are `LP`; **27,319 are `DBE`**. DBE rows exist only for 2024-03-28…2024-11-01, 1,205 households, and only at 00:00 (27,312 at `00:00:00`, 7 at `00:00:01`). None shares a slot with an LP row. Where both neighbours exist (8,029 cases), the DBE import value lies between the LP readings at 23:45 and 00:15 in 7,996 (99.6%), so it is the same cumulative register (`src/probe_dbe.py`, `artifacts/audit/dbe_probe.json`). They are kept in the register series. They are outside 18:30–22:30 and cannot change the target. They do create **18,522 household-days that have only a DBE row** (no LP reading); those appear in the table as `missing_reading` and are counted separately in the report.
 
 **Missing intervals.** 2,938 households. Inside each household's first-to-last span, 98,294,338 quarter-hour slots are expected and 45,613,273 present, so **52,681,065 (53.6%) are missing**. Consecutive-reading gaps: 45,509,741 of one slot, 54,616 of 2–4 slots, 32,182 of 5–96 slots, 13,796 longer than a day. Nothing is filled.
 
@@ -61,7 +61,7 @@ Test run: `python -m unittest tests.test_regressions tests.test_tr2 -v` → **24
 * **The window alignment is confirmed.** Moving the window by ±1 slot (15 minutes) in either direction drops agreement within 0.01 kWh from 99.6% to 38–39% and raises the mean absolute error from 0.023 to 0.078 kWh; ±4 slots gives 19–21%. Zero shift is the clear minimum (`window_shift_sensitivity`).
 * **Same register:** of 735,236 six-hour `TOTAL_IMPORT` readings with adjacent 15-minute registers, 98.7% lie between the 15-minute registers on either side of them (median absolute residual 0.0005 kWh). So `importkwh` is the same cumulative register as `TOTAL_IMPORT`, and the six-hour clock is on the same local time.
 * **Disagreeing days.** 974 compared days (0.29%) differ by more than 0.05 kWh, in 49 of 2,909 households; 8 households disagree on most of their days (for example ID2420, 60 of 119 days), which may be a different tariff-period configuration, cause unknown. They are **flagged, not removed**: `peakwise_target_clean.csv` has a `tr2_check` column (`agree` 334,280; `disagree` 1,063; `plateau_inconsistent` 2,556; `no_bracket` 126,741).
-* Independent spot check (`spot_check.py`, shares no code with the audit): 55 random household-days recomputed from the raw CSVs, 40 valid and 15 rejected, **0 mismatches**.
+* Independent spot check (`src/spot_check.py`, shares no code with the audit): 55 random household-days recomputed from the raw CSVs, 40 valid and 15 rejected, **0 mismatches**.
 
 ## 5. What could not be verified
 
@@ -78,10 +78,10 @@ Test run: `python -m unittest tests.test_regressions tests.test_tr2 -v` → **24
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install pandas numpy
-.venv/bin/python -I peakwise_audit.py --zip data.zip --verify-md5 --out audit_out   # ~2 min, ~1 GB RAM
-.venv/bin/python -I probe_dbe.py --zip data.zip --out audit_out
-.venv/bin/python -I spot_check.py --zip data.zip --audit audit_out --n 40 --seed 7
+.venv/bin/python -I src/peakwise_audit.py --zip data.zip --verify-md5 --out artifacts/audit   # ~2 min, ~1 GB RAM
+.venv/bin/python -I src/probe_dbe.py --zip data.zip --out artifacts/audit
+.venv/bin/python -I src/spot_check.py --zip data.zip --audit artifacts/audit --n 40 --seed 7
 .venv/bin/python -m unittest tests.test_regressions tests.test_tr2 -v
 ```
 
-Outputs in `audit_out/`: `audit_report.json`, `household_days_peak.csv` (every household-day with status), `peakwise_target_clean.csv` (valid days only: household_ID, date, peak_kwh_1830_2230, tr2_check), `tr2_crosscheck.csv`, `valid_days_per_household.csv`, `valid_households_per_date.csv`, `dbe_probe.json`.
+Outputs in `artifacts/audit/`: `audit_report.json`, `household_days_peak.csv` (every household-day with status), `peakwise_target_clean.csv` (valid days only: household_ID, date, peak_kwh_1830_2230, tr2_check), `tr2_crosscheck.csv`, `valid_days_per_household.csv`, `valid_households_per_date.csv`, `dbe_probe.json`.

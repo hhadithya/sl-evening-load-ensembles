@@ -5,7 +5,7 @@ historical baselines on the Phase 1 model table.
 
 Protocol (fixed before any model is fitted; see notebooks/02_ensembles.ipynb for the reasoning)
 ----------------------------------------------------------------------------------------------
-* Data:      outputs/phase1/model_table.csv.gz, features and splits from phase1.py (unchanged).
+* Data:      artifacts/phase1/model_table.csv.gz, features and splits from phase1.py (unchanged).
 * Tuning:    the 3 expanding-window chronological folds inside the TRAIN period only
              (`phase1.cv_folds`). The validation period and the test period are not seen by tuning.
 * Selection: model families are compared on the VALIDATION period (models fitted on train only).
@@ -21,7 +21,7 @@ Protocol (fixed before any model is fitted; see notebooks/02_ensembles.ipynb for
              (baselines use an explicit fallback chain, see `baseline_frame`). Headline numbers use
              rows of households that have training data; rows of unseen households are reported apart.
 
-Usage:  python phase2.py tune | final | all      (artifacts in outputs/phase2/)
+Usage:  python src/phase2.py tune | final | all      (artifacts in artifacts/phase2/)
 """
 from __future__ import annotations
 
@@ -40,8 +40,9 @@ from sklearn.linear_model import LinearRegression
 
 import phase1
 
-ROOT = Path(__file__).resolve().parent
-OUT = ROOT / "outputs/phase2"
+ROOT = Path(__file__).resolve().parent.parent
+OUT = ROOT / "artifacts/phase2"
+MODEL_DIR = ROOT / "artifacts/models"          # trained models, published with the repository
 SEED = 42
 N_JOBS = 10
 XGB_CHECKPOINTS = list(range(50, 1501, 50))     # cap raised from 600: abs-error models were still improving at 600
@@ -53,7 +54,7 @@ TRAIN_END = pd.Timestamp(phase1.SPLIT_DATES["train"][1])
 def load_table(include_test: bool, path: Path = None) -> pd.DataFrame:
     """Phase 1 model table. With include_test=False the test rows are not even loaded into memory,
     so a tuning mistake that peeks at the test period is structurally impossible."""
-    m = pd.read_csv(path or (ROOT / "outputs/phase1/model_table.csv.gz"), parse_dates=["date"])
+    m = pd.read_csv(path or (ROOT / "artifacts/phase1/model_table.csv.gz"), parse_dates=["date"])
     if not include_test:
         m = m[m["split"] != "test"]
     return m.sort_values(["date", "household_ID"]).reset_index(drop=True)
@@ -256,7 +257,7 @@ def oof_predictions(m: pd.DataFrame, spec: dict, folds) -> tuple:
 
 # numpy 2.x on macOS (Accelerate BLAS) emits spurious "divide by zero / overflow / invalid value in
 # matmul" RuntimeWarnings for perfectly finite inputs. The results are verified independently in
-# check_phase2.py (least squares on the active columns reproduces the weights), so only this message
+# tests/check_phase2.py (least squares on the active columns reproduces the weights), so only this message
 # is silenced, and only around the meta-learner.
 warnings.filterwarnings("ignore", message=".*encountered in matmul", category=RuntimeWarning)
 
@@ -447,7 +448,8 @@ def model_costs(spec: dict, model, m_fit_rows: int, m_sample: pd.DataFrame, path
 
 # ------------------------------------------------------------------------------------ final run
 def run_final(out: Path = OUT, log=print) -> dict:
-    out.mkdir(parents=True, exist_ok=True); (out / "models").mkdir(exist_ok=True)
+    mdir = MODEL_DIR if out == OUT else out / "models"
+    out.mkdir(parents=True, exist_ok=True); mdir.mkdir(parents=True, exist_ok=True)
     specs = json.loads((out / "best_specs.json").read_text())
     m_all = load_table(include_test=True)
     nontest = m_all[m_all["split"] != "test"].reset_index(drop=True)
@@ -464,24 +466,24 @@ def run_final(out: Path = OUT, log=print) -> dict:
     final_models = {}
     for n in ("rf", "xgb", "xgb_alt"):
         t0 = time.time(); mod = fit_model(specs[n], tr); ts = time.time() - t0
-        costs[n] = model_costs(specs[n], mod, len(tr), val, out / "models" / f"{n}_trainonly_tmp", ts)
-        for f in (out / "models").glob(f"{n}_trainonly_tmp.*"):
+        costs[n] = model_costs(specs[n], mod, len(tr), val, mdir / f"{n}_trainonly_tmp", ts)
+        for f in (mdir).glob(f"{n}_trainonly_tmp.*"):
             f.unlink()                                                   # the dashboard uses the refit models
     for n in ("rf", "xgb", "xgb_alt"):                                    # refit on train+val: what the dashboard loads
         mod = fit_model(specs[n], nontest)
         final_models[n] = mod
         if specs[n]["kind"] == "xgb":
-            mod.save_model(str(out / "models" / f"{n}.ubj"))
+            mod.save_model(str(mdir / f"{n}.ubj"))
         else:
-            joblib.dump(mod, out / "models" / f"{n}.joblib", compress=3)
+            joblib.dump(mod, mdir / f"{n}.joblib", compress=3)
     joblib.dump({"weights": dict(zip(STACK_INPUTS, st["meta_test"].coef_)), "inputs": STACK_INPUTS,
-                 "meta": st["meta_test"]}, out / "models" / "stack_meta.joblib")
+                 "meta": st["meta_test"]}, mdir / "stack_meta.joblib")
     manifest = {"features": phase1.FEATURES, "filled_features": phase1.FILLED_FEATURES, "specs": specs,
                 "stack_inputs": STACK_INPUTS, "stack_weights_for_test": dict(zip(STACK_INPUTS, map(float, st["meta_test"].coef_))),
                 "stack_weights_for_validation": dict(zip(STACK_INPUTS, map(float, st["meta_val"].coef_))),
                 "fit_window": [str(nontest["date"].min().date()), str(nontest["date"].max().date())],
                 "versions": {"xgboost": xgb.__version__, "pandas": pd.__version__, "numpy": np.__version__}}
-    (out / "models" / "manifest.json").write_text(json.dumps(manifest, indent=2, default=str))
+    (mdir / "manifest.json").write_text(json.dumps(manifest, indent=2, default=str))
 
     # --- predictions tables
     def frame(df, base_preds, stack, tr_med):

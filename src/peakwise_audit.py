@@ -27,8 +27,8 @@ Nothing is imputed. Every household-day that has at least one reading appears in
 with a status (valid or the first failing rule), and every dropped or flagged row is counted.
 
 Usage:
-  python peakwise_audit.py --zip data.zip --verify-md5 --out audit_out
-  python peakwise_audit.py --csv smart_15min_1.csv smart_15min_2.csv smart_15min_3.csv --out audit_out
+  python src/peakwise_audit.py --zip data.zip --verify-md5 --out artifacts/audit
+  python src/peakwise_audit.py --csv smart_15min_1.csv smart_15min_2.csv smart_15min_3.csv --out artifacts/audit
 Options: --verify-md5 (aborts with exit code 2 on mismatch), --expected-md5, --households ID0001,ID0002
          (debug subset), --cap-kwh 10, --chunksize 500000, --buckets 64, --keep-temp,
          --no-tr2-check (skip the cross-check against the six-hour TR2_TOTAL_IMPORT register),
@@ -871,7 +871,7 @@ def build_parser():
     src = ap.add_mutually_exclusive_group(required=True)
     src.add_argument("--zip", type=Path)
     src.add_argument("--csv", nargs="+")
-    ap.add_argument("--out", type=Path, default=Path("audit_out"))
+    ap.add_argument("--out", type=Path, default=Path("artifacts/audit"))
     ap.add_argument("--verify-md5", action="store_true", help="abort with exit code 2 if the zip md5 differs")
     ap.add_argument("--expected-md5", default=ZIP_MD5)
     ap.add_argument("--households", default=None, help="comma-separated IDs (debug subset)")

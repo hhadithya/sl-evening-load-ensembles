@@ -16,7 +16,7 @@ if missing:
     st.error("The dashboard's saved result files were not found, so it cannot start.")
     st.markdown(f"Looked in `{D.DATA_DIR}`. Missing: {', '.join(f'`{m}`' for m in missing)}.")
     st.markdown("Create them from the saved Phase 1 and Phase 2 outputs with:")
-    st.code("python build_dashboard_data.py", language="bash")
+    st.code("python src/build_dashboard_data.py", language="bash")
     st.stop()
 
 from dashboard.views import explorer, insights, model_lab, overview   # noqa: E402

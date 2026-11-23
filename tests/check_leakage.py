@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Executable leakage and correctness tests for the PeakWise Phase 1 feature table.
 
-    python -I -m unittest check_leakage -v        (or: python -I check_leakage.py)
+    python tests/check_leakage.py
 
 These are tests, not assertions in prose: each one would fail loudly if a feature of day D could
 see day D or anything after it.
@@ -14,9 +14,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 import phase1
 
-AUDIT = Path(__file__).resolve().parent / "audit_out"
+AUDIT = Path(__file__).resolve().parent.parent / "artifacts/audit"
 SEED = 7
 
 

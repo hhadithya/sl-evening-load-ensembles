@@ -25,7 +25,7 @@ from streamlit.testing.v1 import AppTest
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 DATA = ROOT / "dashboard" / "data"
-P2 = ROOT / "outputs" / "phase2"
+P2 = ROOT / "artifacts" / "phase2"
 TIMEOUT = 90
 
 
@@ -67,7 +67,7 @@ class Artifacts(unittest.TestCase):
         for i in range(1, 10000):
             d = hashlib.sha256(f"peakwise-demo:ID{i:04d}".encode()).hexdigest().upper()
             self.assertNotIn("H-" + d[:6], labels, "a label is reproducible with the old public salt")
-        self.assertNotIn("peakwise-demo", (ROOT / "build_dashboard_data.py").read_text(), "a fixed salt is hard-coded again")
+        self.assertNotIn("peakwise-demo", (ROOT / "src" / "build_dashboard_data.py").read_text(), "a fixed salt is hard-coded again")
 
     def test_only_the_columns_the_app_uses_are_published(self):
         p = pd.read_csv(DATA / "predictions_test_pseudonymized.csv.gz", nrows=5)
@@ -90,7 +90,7 @@ class NumbersAreCopiesOfSavedResults(unittest.TestCase):
 
     def test_predictions_match_phase2_row_for_row(self):
         if not (P2 / "predictions_test.csv.gz").exists():
-            self.skipTest("raw-ID Phase 2 predictions are not stored in the repository; run `python phase2.py all` to regenerate them")
+            self.skipTest("raw-ID Phase 2 predictions are not stored in the repository; run `python src/phase2.py all` to regenerate them")
         a = pd.read_csv(DATA / "predictions_test_pseudonymized.csv.gz", parse_dates=["date"])
         b = pd.read_csv(P2 / "predictions_test.csv.gz", parse_dates=["date"])
         self.assertEqual(len(a), len(b))

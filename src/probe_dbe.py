@@ -4,7 +4,7 @@ cumulative import register as the neighbouring LP readings.
 
 For each DBE row stamped 00:00:00 of day D (household h) it looks up h's LP readings at 23:45 of D-1 and 00:15 of D
 and tests whether the DBE register lies between them (+-0.01 kWh). Writes <out>/dbe_probe.json.
-Usage: python -I probe_dbe.py --zip data.zip --out audit_out
+Usage: python -I src/probe_dbe.py --zip data.zip --out artifacts/audit
 """
 import argparse, io, json, zipfile
 from pathlib import Path
@@ -17,7 +17,7 @@ COLS = ["household_ID", "date", "time", "obis", "importkwh(kwh)"]
 
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("--zip", type=Path, required=True)
-    ap.add_argument("--out", type=Path, default=Path("audit_out")); a = ap.parse_args()
+    ap.add_argument("--out", type=Path, default=Path("artifacts/audit")); a = ap.parse_args()
     zf = zipfile.ZipFile(a.zip)
     dbe, all_obis = [], {}
     for m in MEMBERS:                                   # pass A: collect every non-LP row

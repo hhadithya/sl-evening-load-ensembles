@@ -5,7 +5,7 @@ PeakWise Phase 1: feature table, chronological splits and baselines for next-day
 Target
 ------
 y(h, D) = household h's grid import in kWh over 18:30-22:30 Sri Lanka time on day D,
-taken from the audited file `audit_out/peakwise_target_clean.csv` (464,640 valid household-days).
+taken from the audited file `artifacts/audit/peakwise_target_clean.csv` (464,640 valid household-days).
 The raw 45.6M-row pipeline is NOT rebuilt here.
 
 Forecast setting
@@ -13,7 +13,7 @@ Forecast setting
 The forecast for day D is made at the end of day D-1, so a feature may only use information
 from dates <= D - HORIZON_DAYS (HORIZON_DAYS = 1). Every feature below is computed from the
 household's own valid evening values on a complete daily calendar, shifted by one day first,
-so no value from day D or later can enter a feature of day D. `check_leakage.py` tests this.
+so no value from day D or later can enter a feature of day D. `tests/check_leakage.py` tests this.
 
 Design notes (why these features)
 ---------------------------------
@@ -29,7 +29,7 @@ Design notes (why these features)
 
 Usage
 -----
-    python -I phase1.py --audit audit_out --out outputs/phase1
+    python -I src/phase1.py --audit artifacts/audit --out artifacts/phase1
 Writes: model_table.csv.gz, baseline_metrics.csv, baseline_predictions_sample.csv, phase1_summary.json
 """
 from __future__ import annotations
@@ -253,8 +253,8 @@ def evaluate(df: pd.DataFrame, train_median: float, restrict_common: bool = Fals
 # --------------------------------------------------------------------------------------- CLI
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--audit", type=Path, default=Path("audit_out"))
-    ap.add_argument("--out", type=Path, default=Path("outputs/phase1"))
+    ap.add_argument("--audit", type=Path, default=Path("artifacts/audit"))
+    ap.add_argument("--out", type=Path, default=Path("artifacts/phase1"))
     ap.add_argument("--min-history", type=int, default=1)
     a = ap.parse_args(argv)
     a.out.mkdir(parents=True, exist_ok=True)
