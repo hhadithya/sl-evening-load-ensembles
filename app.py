@@ -3,13 +3,14 @@ from __future__ import annotations
 
 import streamlit as st
 
-st.set_page_config(page_title="PeakWise", page_icon=None, layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="PeakWise", page_icon="⚡", layout="wide", initial_sidebar_state="collapsed")
 
 from dashboard import data as D          # noqa: E402  (after set_page_config)
 from dashboard import theme as T         # noqa: E402
 
 T.inject_css()
-st.markdown('<div class="pw-brand"><b>PeakWise</b><span>Ensemble learning for next-day evening electricity forecasts</span></div>', unsafe_allow_html=True)
+BOLT = ('<svg class="pw-bolt" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M13.5 1.5 4 13.6h6.4L9.3 22.5 20 9.6h-6.6z"/></svg>')
+st.markdown(f'<div class="pw-brand">{BOLT}<b>PeakWise</b><span>Ensemble learning for next-day evening electricity forecasts</span></div>', unsafe_allow_html=True)
 
 missing = D.missing_artifacts()
 if missing:

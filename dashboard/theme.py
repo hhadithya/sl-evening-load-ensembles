@@ -23,6 +23,7 @@ h2 {{ font-size: 1.35rem; font-weight: 620; letter-spacing: -0.01em; color: {NAV
 h3 {{ font-size: 1.05rem; font-weight: 620; color: {NAVY}; margin-top: 1.4rem; }}
 p, li {{ line-height: 1.62; }}
 .pw-brand {{ display:flex; align-items:baseline; gap:.7rem; padding-bottom:.55rem; border-bottom:1px solid {LINE}; margin-bottom:.4rem; }}
+.pw-bolt {{ width:1.25rem; height:1.25rem; fill:{TEAL}; align-self:center; flex:none; margin-right:-.2rem; }}
 .pw-brand b {{ font-size:1.15rem; letter-spacing:-0.01em; color:{NAVY}; font-weight:700; }}
 .pw-brand span {{ color:{MUTED}; font-size:.82rem; }}
 .pw-eyebrow {{ text-transform:uppercase; letter-spacing:.09em; font-size:.72rem; font-weight:600; color:{TEAL}; margin:.2rem 0 .2rem; }}
