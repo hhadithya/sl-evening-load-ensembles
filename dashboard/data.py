@@ -24,6 +24,7 @@ NAMES = {BASE: "7-day median (baseline)", "base_persistence": "Persistence (yest
          "rf": "Random Forest", "xgb": "XGBoost", "xgb_alt": "XGBoost (log target)", "stack": "Stacking",
          "stack_equal_avg": "Equal-weight average"}
 MAIN = [BASE, "rf", "xgb", "stack"]
+ROLES = {BASE: "7-day median · baseline", "rf": "Random Forest · bagging", "xgb": "XGBoost · boosting", "stack": "Stacking · meta-learner"}
 
 
 def missing_artifacts() -> list:

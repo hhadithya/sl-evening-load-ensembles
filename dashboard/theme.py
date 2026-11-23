@@ -47,10 +47,16 @@ p, li {{ line-height: 1.62; }}
 .pw-dot {{ display:inline-block; width:.62rem; height:.62rem; border-radius:50%; margin-right:.5rem; vertical-align:baseline; }}
 .pw-cols2 {{ display:grid; grid-template-columns:1fr 1fr; gap:1.6rem; }}
 .pw-two th {{ text-align:left !important; }} .pw-two td {{ text-align:left !important; vertical-align:top; }}
+.pw-q {{ display:grid; grid-template-columns:minmax(0,14rem) minmax(0,1fr); gap:1.4rem; padding:.85rem 0; border-bottom:1px solid {LINE}; }}
+.pw-q .q {{ font-weight:600; color:{NAVY}; font-size:.95rem; line-height:1.4; }}
+.pw-q .a {{ color:{INK}; font-size:.95rem; line-height:1.5; }}
+.pw-q .a b {{ color:{NAVY}; }}
+.pw-q .a .e {{ display:block; color:{SLATE}; font-size:.89rem; margin-top:.2rem; }}
+.pw-next {{ color:{SLATE}; font-size:.88rem; margin-top:1.2rem; }}
 .pw-foot {{ margin-top:3rem; padding-top:.9rem; border-top:1px solid {LINE}; color:{MUTED}; font-size:.78rem; line-height:1.55; }}
 div[data-testid="stTabs"] button {{ font-weight:560; }}
 div[data-testid="stMetric"] {{ border-top:2px solid {NAVY}; padding-top:.5rem; }}
-@media (max-width: 800px) {{ h1 {{ font-size:1.55rem; }} .pw-stats {{ grid-template-columns:repeat(2, minmax(0,1fr)); }} .pw-cols2 {{ grid-template-columns:1fr; }} }}
+@media (max-width: 800px) {{ h1 {{ font-size:1.55rem; }} .pw-stats {{ grid-template-columns:repeat(2, minmax(0,1fr)); }} .pw-cols2 {{ grid-template-columns:1fr; }} .pw-q {{ grid-template-columns:1fr; gap:.25rem; }} }}
 </style>
 """
 

@@ -11,7 +11,7 @@ def fmt_pct(v: float) -> str:
     return f"{v:+.1f}%"
 
 
-def results_table(m: pd.DataFrame, rows: list, cols: list, ref: str = BASE) -> str:
+def results_table(m: pd.DataFrame, rows: list, cols: list, ref: str = BASE, labels: dict | None = None) -> str:
     """cols: list of (column, header, formatter, kind) with kind in {'metric', 'delta'}.
     Best (lowest) value per metric column among `rows` is bold; deltas are coloured by sign."""
     best = {c: m.loc[rows, c].min() for c, _, _, k in cols if k == "metric"}
@@ -27,5 +27,5 @@ def results_table(m: pd.DataFrame, rows: list, cols: list, ref: str = BASE) -> s
             if kind == "delta" and r != ref:
                 cls = "good" if v < -0.05 else ("bad" if v > 0.05 else "")
             cells += f'<td class="{cls}">{"–" if (kind == "delta" and r == ref) else f(v)}</td>'
-        body += f'<tr class="{"ref" if r == ref else ""}"><td>{dot(r)}{NAMES[r]}</td>{cells}</tr>'
+        body += f'<tr class="{"ref" if r == ref else ""}"><td>{dot(r)}{(labels or NAMES)[r]}</td>{cells}</tr>'
     return f'<table class="pw-table"><thead><tr><th>Model</th>{head}</tr></thead><tbody>{body}</tbody></table>'
